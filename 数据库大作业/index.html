@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <div id="app">
+    <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+      <el-submenu index="1">
+        <template slot="title">查看表单</template>
+        <el-menu-item index="1-1" @click="showFlightsTable">Flights</el-menu-item>
+        <el-menu-item index="1-2" @click="showHotelsTable">Hotels</el-menu-item>
+        <el-menu-item index="1-3" @click="showBusTable">Bus</el-menu-item>
+        <el-menu-item index="1-4" @click="showCusTable">Customers</el-menu-item>
+        <el-menu-item index="1-5" @click="showResTable">Reservations</el-menu-item>
+      </el-submenu>
+      <el-menu-item index="2" @click="reserv">预定</el-menu-item>
+      <!-- <el-menu-item index="3"><a href="https://www.ele.me" target="_blank">查询</a></el-menu-item> -->
+      <el-menu-item index="3" @click="iou">修改表单</el-menu-item>
+      <!-- insert or update -->
+    </el-menu>
+    <br>
+
+<template>
+  <el-table v-if="isFlightsTableVisible"
+    :data="flightsTableData.filter(data => !search || data.flightNum.toLowerCase().includes(search.toLowerCase()) || data.fromCity.toLowerCase().includes(search.toLowerCase()) || data.arivCity.toLowerCase().includes(search.toLowerCase()))"
+    stripe
+    style="width: 100%">
+      <!-- 关键字可与航班号,起始城市,终止城市匹配 -->
+    <el-table-column
+      prop="flightNum"
+      label="航班号"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="price"
+      label="价格"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numSeats"
+      label="座位总数"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numAvail"
+      label="剩余座位"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="fromCity"
+      label="起点城市"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="arivCity"
+      label="终点城市"
+      width="180">
+    </el-table-column>
+    <el-table-column
+    align="right">
+    <template slot="header" slot-scope="scope">
+      <el-input
+        v-model="search"
+        size="mini"
+        placeholder="输入关键字(航班号,起始城市,终止城市)搜索" style="width: 300px"/>
+    </template>
+    </el-table-column>
+  </el-table>
+</template>
+
+<template>
+  <el-table v-if="isHotelsTableVisible"
+    :data="hotelsTableData.filter(data => !search || data.location.toLowerCase().includes(search.toLowerCase()))"
+    stripe
+    style="width: 100%">
+    <el-table-column
+      prop="location"
+      label="地点"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="price"
+      label="价格"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numRooms"
+      label="房间总数"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numAvail"
+      label="剩余房间"
+      width="180">
+    </el-table-column>
+    <el-table-column
+    align="right">
+    <template slot="header" slot-scope="scope">
+      <el-input
+        v-model="search"
+        size="mini"
+        placeholder="输入关键字(地点)搜索" style="width: 300px;"/>
+    </template>
+    </el-table-column>
+  </el-table>
+</template>
+
+<template>
+  <el-table v-if="isBusTableVisible"
+    :data="busTableData.filter(data => !search || data.location.toLowerCase().includes(search.toLowerCase()))"
+    stripe
+    style="width: 100%">
+    <el-table-column
+      prop="location"
+      label="地点"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="price"
+      label="价格"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numBus"
+      label="大巴总数"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="numAvail"
+      label="剩余大巴"
+      width="180">
+    </el-table-column>
+    <el-table-column
+    align="right">
+    <template slot="header" slot-scope="scope">
+      <el-input
+        v-model="search"
+        size="mini"
+        placeholder="输入关键字(location)搜索" style="width: 300px;"/>
+    </template>
+    </el-table-column>
+  </el-table>
+</template>
+
+<template>
+  <el-table v-if="isCusTableVisible"
+    :data="cusTableData.filter(data => !search || data.cusID.toLowerCase().includes(search.toLowerCase()) || data.cusName.toLowerCase().includes(search.toLowerCase()))"
+    stripe
+    style="width: 100%">
+    <el-table-column
+      prop="cusID"
+      label="顾客编号"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="cusName"
+      label="顾客姓名"
+      width="180">
+    </el-table-column>
+    <el-table-column
+    align="right">
+    <template slot="header" slot-scope="scope">
+      <el-input
+        v-model="search"
+        size="mini"
+        placeholder="输入关键字(顾客id,顾客姓名)搜索" style="width: 300px;"/>
+    </template>
+    </el-table-column>
+  </el-table>
+</template>
+
+<template>
+  <el-table v-if="isResTableVisible"
+    :data="resTableData.filter(data => !search || data.cusName.toLowerCase().includes(search.toLowerCase()) || data.resvKey.toLowerCase().includes(search.toLowerCase()))"
+    stripe
+    style="width: 100%">
+    <el-table-column
+      prop="cusName"
+      label="顾客姓名"
+      width="180">
+    </el-table-column>
+    <el-table-column
+      prop="resvType"
+      label="预定类型"
+      width="180">
+    </el-table-column>
+    <el-table-column
+    prop="resvKey"
+    label="预定关键词"
+    width="180">
+  </el-table-column>
+    <el-table-column
+    align="right">
+    <template slot="header" slot-scope="scope">
+      <el-input
+        v-model="search"
+        size="mini"
+        placeholder="输入关键字(顾客姓名,预定关键词)搜索" style="width: 300px;"/>
+    </template>
+    </el-table-column>
+  </el-table>
+</template>
+
+<el-form v-if="isResTableVisible" :inline="true" :model="checkResFormInline" class="demo-form-inline">
+  <br>
+  <br>
+  <el-form-item label="顾客姓名">
+    <el-input v-model="checkResFormInline.cusName" placeholder="cusName"></el-input>
+  </el-form-item>
+  <el-form-item label="起始城市">
+    <el-input v-model="checkResFormInline.fromCity" placeholder="fromCity"></el-input>
+  </el-form-item>
+  <el-form-item label="终点城市">
+    <el-input v-model="checkResFormInline.arivCity" placeholder="arivCity"></el-input>
+  </el-form-item>
+
+  <el-form-item>
+    <el-button type="primary" @click="checkRes">检查预定完整性</el-button>
+  </el-form-item>
+</el-form>
+
+<el-form v-if="isResFormVisible" :inline="true" :model="resFormInline" class="demo-form-inline">
+  <el-form-item label="顾客姓名">
+    <el-input v-model="resFormInline.cusName" placeholder="cusName"></el-input>
+  </el-form-item>
+  <el-form-item label="预定类型">
+    <el-select v-model="resFormInline.resType" placeholder="resType">
+      <el-option label="预定航班" value="1"></el-option>
+      <el-option label="预定宾馆" value="2"></el-option>
+      <el-option label="预定大巴" value="3"></el-option>
+    </el-select>
+  </el-form-item>
+  <el-form-item label="预定关键词">
+    <el-input v-model="resFormInline.resKey" placeholder="航班号或者宾馆大巴的地点"></el-input>
+  </el-form-item>
+  <el-form-item>
+    <el-button type="primary" @click="onSubmitRes">预定</el-button>
+  </el-form-item>
+</el-form>
+
+
+
+
+<el-form v-if="isIouFormVisible" :inline="true" :model="iouFormInline" class="demo-form-inline">
+  <el-form-item label="表单类型">
+    <el-select v-model="iouFormInline.tableType" placeholder="tableType">
+      <el-option label="航班" value="flights"></el-option>
+      <el-option label="宾馆" value="hotels"></el-option>
+      <el-option label="大巴" value="bus"></el-option>
+      <el-option label="顾客" value="customers"></el-option>
+    </el-select>
+  </el-form-item>
+  <el-form-item label="插入或更新数据">
+    <el-select v-model="iouFormInline.doWhat" placeholder="inser or update">
+      <el-option label="插入新数据" value="1"></el-option>
+      <el-option label="更新原有数据" value="2"></el-option>
+    </el-select>
+  </el-form-item>
+  <el-form-item>
+    <el-button type="primary" @click="showSingleTable">继续</el-button>
+  </el-form-item>
+</el-form>
+
+<el-form v-if="isFlightsFormVisible" :inline="true" :model="flightsFormInline" class="demo-form-inline">
+  <el-form-item label="航班号">
+    <el-input v-model="flightsFormInline.flightNum" placeholder="flightNum"></el-input>
+  </el-form-item>
+  <el-form-item label="价格">
+    <el-input v-model="flightsFormInline.price" placeholder="price"></el-input>
+  </el-form-item>
+  <el-form-item label="全部座位">
+    <el-input v-model="flightsFormInline.numSeats" placeholder="numSeats"></el-input>
+  </el-form-item>
+  <el-form-item label="剩余座位">
+    <el-input v-model="flightsFormInline.numAvail" placeholder="numAvail"></el-input>
+  </el-form-item>
+  <el-form-item label="起始城市">
+    <el-input v-model="flightsFormInline.fromCity" placeholder="fromCity"></el-input>
+  </el-form-item>
+  <el-form-item label="终点城市">
+    <el-input v-model="flightsFormInline.arivCity" placeholder="arivCity"></el-input>
+  </el-form-item>
+
+  <el-form-item>
+    <el-button type="primary" @click="onSubmitFlights">提交</el-button>
+  </el-form-item>
+</el-form>
+
+<el-form v-if="isHotelsFormVisible" :inline="true" :model="hotelsFormInline" class="demo-form-inline">
+  <el-form-item label="地点">
+    <el-input v-model="hotelsFormInline.location" placeholder="location"></el-input>
+  </el-form-item>
+  <el-form-item label="价格">
+    <el-input v-model="hotelsFormInline.price" placeholder="price"></el-input>
+  </el-form-item>
+  <el-form-item label="房间总数">
+    <el-input v-model="hotelsFormInline.numRooms" placeholder="numRooms"></el-input>
+  </el-form-item>
+  <el-form-item label="剩余房间">
+    <el-input v-model="hotelsFormInline.numAvail" placeholder="numAvail"></el-input>
+  </el-form-item>
+
+  <el-form-item>
+    <el-button type="primary" @click="onSubmitHotels">提交</el-button>
+  </el-form-item>
+</el-form>
+
+<el-form v-if="isBusFormVisible" :inline="true" :model="busFormInline" class="demo-form-inline">
+  <el-form-item label="地点">
+    <el-input v-model="busFormInline.location" placeholder="location"></el-input>
+  </el-form-item>
+  <el-form-item label="价格">
+    <el-input v-model="busFormInline.price" placeholder="price"></el-input>
+  </el-form-item>
+  <el-form-item label="大巴总数">
+    <el-input v-model="busFormInline.numBus" placeholder="numBus"></el-input>
+  </el-form-item>
+  <el-form-item label="剩余大巴">
+    <el-input v-model="busFormInline.numAvail" placeholder="numAvail"></el-input>
+  </el-form-item>
+
+  <el-form-item>
+    <el-button type="primary" @click="onSubmitBus">提交</el-button>
+  </el-form-item>
+</el-form>
+
+<el-form v-if="isCusFormVisible" :inline="true" :model="cusFormInline" class="demo-form-inline">
+  <el-form-item label="用户ID">
+    <el-input v-model="cusFormInline.cusID" placeholder="cusID"></el-input>
+  </el-form-item>
+  <el-form-item label="用户姓名">
+    <el-input v-model="cusFormInline.cusName" placeholder="cusName"></el-input>
+  </el-form-item>
+
+  <el-form-item>
+    <el-button type="primary" @click="onSubmitCus">提交</el-button>
+  </el-form-item>
+</el-form>
+
+
+  </div>
+
+    <script src="vue.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+  <script>
+    new Vue({
+      el: '#app',
+      data(){
+        return {
+          isFlightsTableVisible:false,
+          isHotelsTableVisible:false,
+          isBusTableVisible:false,
+          isCusTableVisible:false,
+          isResTableVisible:false,
+          isResFormVisible:false,
+          isIouFormVisible:false,
+          isFlightsFormVisible:false,
+          isHotelsFormVisible:false,
+          isBusFormVisible:false,
+          isCussFormVisible:false,
+          flightsTableData:[],
+          hotelsTableData:[],
+          busTableData:[],
+          cusTableData:[],
+          resTableData:[],
+
+          search:"",
+          checkResName:"",
+
+          checkResFormInline:{
+            cusName: '',
+            fromCity: '',
+            arivCity: ''
+          },
+
+          resFormInline:{
+            cusName: '',
+            resType: '',
+            resKey: ''
+          },
+
+          iouFormInline:{
+            tableType: '',
+            doWhat: '',
+          },
+
+          flightsFormInline:{
+            flightNum: '',
+            price: '',
+            numSeats: '',
+            numAvail: '',
+            fromCity: '',
+            arivCity: ''
+          },
+          hotelsFormInline:{
+            location:'',
+            price:'',
+            numRooms:'',
+            numAvail:''
+          },
+          busFormInline:{
+            location:'',
+            price:'',
+            numBus:'',
+            numAvail:''
+          },
+          cusFormInline:{
+            cusID:'',
+            cusName:''
+          },
+      }
+      },
+
+      methods:{
+        closeAllTable(){
+          this.isFlightsTableVisible = false,
+          this.isHotelsTableVisible = false,
+          this.isBusTableVisible = false,
+          this.isCusTableVisible = false,
+          this.isResTableVisible = false,
+          this.isResFormVisible = false,
+          this.isIouFormVisible = false,
+          this.isFlightsFormVisible = false,
+          this.isHotelsFormVisible = false,
+          this.isBusFormVisible = false,
+          this.isCusFormVisible = false,
+          this.flightsTableData = [],
+          this.hotelsTableData = [],
+          this.busTableData = [],
+          this.cusTableData = [],
+          this.resTableData = []
+        },
+        showFlightsTable(){
+          this.closeAllTable();
+          axios.get('http://localhost:5000/api/showFlights')
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            data.forEach((flight,index) =>{
+              this.flightsTableData[index] = {
+                flightNum: data[index][0],
+                price: data[index][1],
+                numSeats: data[index][2],
+                numAvail: data[index][3],
+                fromCity: data[index][4],
+                arivCity: data[index][5]
+              };
+            })
+            console.log(this.flightsTableData)
+            this.isFlightsTableVisible = true;
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+        showHotelsTable(){
+          this.closeAllTable();
+          axios.get('http://localhost:5000/api/showHotels')
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            data.forEach((hotel,index) =>{
+              this.hotelsTableData[index] = {
+                location: data[index][0],
+                price: data[index][1],
+                numRooms: data[index][2],
+                numAvail: data[index][3],
+              };
+            })
+            console.log(this.hotelsTableData)
+            this.isHotelsTableVisible = true
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+        showBusTable(){
+          this.closeAllTable();
+          axios.get('http://localhost:5000/api/showBus')
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            data.forEach((bu,index) =>{
+              this.busTableData[index] = {
+                location: data[index][0],
+                price: data[index][1],
+                numBus: data[index][2],
+                numAvail: data[index][3],
+              };
+            })
+            console.log(this.hotelsTableData)
+            this.isBusTableVisible = true
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+        showCusTable(){
+          this.closeAllTable();
+          axios.get('http://localhost:5000/api/showCus')
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            data.forEach((cus,index) =>{
+              this.cusTableData[index] = {
+                cusID: data[index][0],
+                cusName: data[index][1],
+              };
+            })
+            console.log(this.cusTableData)
+            this.isCusTableVisible = true
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+        showResTable(){
+          this.closeAllTable();
+          axios.get('http://localhost:5000/api/showRes')
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            data.forEach((res,index) =>{
+              this.resTableData[index] = {
+                cusName: data[index][0],
+                resvType: data[index][1],
+                resvKey: data[index][2]
+              };
+            })
+            console.log(this.resTableData)
+            this.isResTableVisible = true
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+        checkRes(){
+          axios.post('http://localhost:5000/api/checkRes',this.checkResFormInline)
+          .then(response => {
+            const data = response.data;
+            console.log(data)
+            if(data[0][0] == 0){
+              alert("预定线路不完整!")
+            }
+            else if(data[0][0] == 1){
+              alert("预定线路完整!")
+            }
+          })
+          .catch(error => {
+          console.error(error);
+          // 处理错误
+          });
+        },
+
+        resetResForm(){
+          this.resFormInline.cusName = '',
+          this.resFormInline.resType = '',
+          this.resFormInline.resKey = ''
+        },
+        resetFlightsForm(){
+            this.flightsFormInline.flightNum = '',
+            this.flightsFormInline.price='',
+            this.flightsFormInline.numSeats='',
+            this.flightsFormInline.numAvail='',
+            this.flightsFormInline.fromCity='',
+            this.flightsFormInline.arivCity=''
+        },
+        resetHotelsForm(){
+            this.hotelsFormInline.location='',
+            this.hotelsFormInline.price='',
+            this.hotelsFormInline.numRooms='',
+            this.hotelsFormInline.numAvail=''
+        },
+        resetBusForm(){
+            this.busFormInline.location='',
+            this.busFormInline.price='',
+            this.busFormInline.numBus='',
+            this.busFormInline.numAvail=''
+        },
+        resetCusForm(){
+            this.cusFormInline.cusID='',
+            this.cusFormInline.cusName=''
+        },
+        reserv(){
+          this.closeAllTable()
+          this.isResFormVisible = true
+        },
+        onSubmitRes(){
+          axios.post('http://localhost:5000/api/onSubmitRes',this.resFormInline)
+          .then(response =>{
+            console.log(response.data);
+            alert("预定成功");
+            this.resetResForm();
+          })
+          .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:顾客姓名首先要出现在customers中,并且要确保预定的东西存在并且数量大于零");
+          })
+        },
+        iou(){
+          this.closeAllTable();
+          this.isIouFormVisible = true;
+        },
+        onSubmitFlights(){
+          if(this.iouFormInline.doWhat==1){
+            axios.post('http://localhost:5000/api/onSubmitFlightsInsert',this.flightsFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("插入成功");
+              this.resetFlightsForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:插入的flightNum不能重复并且numSeats>=0且numAvail>=numSeats");
+          })
+          }
+          else if(this.iouFormInline.doWhat==2){
+            axios.post('http://localhost:5000/api/onSubmitFlightsUpdate',this.flightsFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("更新成功");
+              this.resetFlightsForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:更新的flightNum必须与原有值相同并且numSeats-numAvail值必须不变");
+          })
+          }
+        },
+        onSubmitHotels(){
+          if(this.iouFormInline.doWhat==1){
+            axios.post('http://localhost:5000/api/onSubmitHotelsInsert',this.hotelsFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("插入成功");
+              this.resetHotelsForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:插入的location不能重复并且numRooms>=0且numAvail>=numRooms");
+          })
+          }
+          else if(this.iouFormInline.doWhat==2){
+            axios.post('http://localhost:5000/api/onSubmitHotelsUpdate',this.hotelsFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("更新成功");
+              this.resetHotelsForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:更新的location必须与原有值相同并且numSeats-numAvail值必须不变");
+          })
+          }
+        },
+        onSubmitBus(){
+          if(this.iouFormInline.doWhat==1){
+            axios.post('http://localhost:5000/api/onSubmitBusInsert',this.busFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("插入成功");
+              this.resetBusForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:插入的location不能重复并且numBus>=0且numAvail>=numBus");
+          })
+          }
+          else if(this.iouFormInline.doWhat==2){
+            axios.post('http://localhost:5000/api/onSubmitBusUpdate',this.busFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("更新成功");
+              this.resetBusForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:更新的location必须与原有值相同并且numBus-numAvail值必须不变");
+          })
+          }
+        },
+        onSubmitCus(){
+          if(this.iouFormInline.doWhat==1){
+            axios.post('http://localhost:5000/api/onSubmitCusInsert',this.cusFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("插入成功");
+              this.resetCusForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:插入的cusID不能重复");
+          })
+          }
+          else if(this.iouFormInline.doWhat==2){
+            axios.post('http://localhost:5000/api/onSubmitCusUpdate',this.cusFormInline)
+            .then(response =>{
+              console.log(response.data);
+              alert("更新成功");
+              this.resetCusForm();
+            })
+            .catch(error =>{
+            console.error(error);
+            alert("出错了!!!注意:更新的cusID必须与原有值相同");
+          })
+          }
+        },
+        showSingleTable(){
+          this.closeAllTable();
+          this.isIouFormVisible = true;
+          if(this.iouFormInline.tableType=='flights'){
+            this.isFlightsFormVisible = true;
+          }
+          if(this.iouFormInline.tableType=='hotels'){
+            this.isHotelsFormVisible = true;
+          }
+          if(this.iouFormInline.tableType=='bus'){
+            this.isBusFormVisible = true;
+          }
+          if(this.iouFormInline.tableType=='customers'){
+            this.isCusFormVisible = true;
+          }
+        },
+      }
+    })
+  </script>
+
+</body>
+</html>
